@@ -50,4 +50,9 @@ class User extends Authenticatable
     {
         return $this->HasMany(Chirp::class);
     }
+
+    public function snaps(): HasMany
+    {
+        return $this->HasMany(Snap::class);
+    }
 }

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { PencilIcon, TrashIcon } from 'lucide-react';
 import PrimaryButton from './PrimaryButton';
+import ImageModal from './ImageModal';
 
 export default function Snap({ snap, onUpdateSnap, onDeleteSnap }) {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedPhoto, setUpdatedPhoto] = useState(null);
-  const [selectedPhotoName, setSelectedPhotoName] = useState('');
+    const [selectedPhotoName, setSelectedPhotoName] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!snap?.user?.name || !snap?.photo_path) {
     return null;
@@ -21,6 +23,12 @@ export default function Snap({ snap, onUpdateSnap, onDeleteSnap }) {
     setIsEditing(true);
   };
 
+      const handleImageClick = () => {
+    if (!isEditing) {
+      setIsModalOpen(true);
+    }
+  };
+
   const handleSaveClick = async () => {
     if (updatedPhoto && onUpdateSnap) {
       onUpdateSnap(snap.id, updatedPhoto);
@@ -31,7 +39,7 @@ export default function Snap({ snap, onUpdateSnap, onDeleteSnap }) {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
+    <div className="p-6 bg-white rounded-2xl shadow-md">
       <div className="flex-1">
         <div className="flex justify-between items-center">
           <div>
@@ -91,15 +99,24 @@ export default function Snap({ snap, onUpdateSnap, onDeleteSnap }) {
               </div>
             </div>
           ) : (
+          <>
             <img
               src={`/storage/${snap.photo_path}`}
               alt={`Snap by ${snap.user.name}`}
-              className="w-full rounded-lg"
+              className="w-full rounded-3xl shadow-lg cursor-pointer"
+              onClick={handleImageClick}
               onError={(e) => {
                 e.target.src = 'https://via.placeholder.com/400x300';
                 e.target.onerror = null;
               }}
             />
+            <ImageModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              imageSrc={`/storage/${snap.photo_path}`}
+              imageAlt={`Snap by ${snap.user.name}`}
+            />
+          </>
           )}
         </div>
       </div>

@@ -11,11 +11,14 @@ export default function Index({ auth, snaps = [] }) {
     photo: null,
   });
   const [selectedFileName, setSelectedFileName] = useState('');
-  const [updatedSnaps, setUpdatedSnaps] = useState(snaps);
+  const [updatedSnaps, setUpdatedSnaps] = useState([]);
   const [snapToDelete, setSnapToDelete] = useState(null);
 
   useEffect(() => {
-    setUpdatedSnaps(snaps);
+    const sortedSnaps = [...snaps].sort((a, b) =>
+      new Date(b.created_at) - new Date(a.created_at)
+    );
+    setUpdatedSnaps(sortedSnaps);
   }, [snaps]);
 
   const handleFileChange = (e) => {
@@ -30,6 +33,7 @@ export default function Index({ auth, snaps = [] }) {
       onSuccess: () => {
         reset();
         setSelectedFileName('');
+        router.reload({ only: ['snaps'] });
       },
       preserveScroll: true,
     });
@@ -43,7 +47,6 @@ export default function Index({ auth, snaps = [] }) {
     router.post(route('snaps.update', snapId), formData, {
       forceFormData: true,
       onSuccess: () => {
-        // Refresh the page to show updated image
         router.reload({ only: ['snaps'] });
       },
     });
@@ -57,19 +60,23 @@ export default function Index({ auth, snaps = [] }) {
     router.delete(route('snaps.destroy', snapToDelete.id), {
       onSuccess: () => {
         setSnapToDelete(null);
-        // Optional: Update local state instead of relying on page reload
-        setUpdatedSnaps(updatedSnaps.filter((snap) => snap.id !== snapToDelete.id));
+        setUpdatedSnaps(prev =>
+          prev.filter(snap => snap.id !== snapToDelete.id)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        );
       },
     });
   };
 
   return (
-    <AuthenticatedLayout>
+    <AuthenticatedLayout
+      header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Snaps</h2>}
+    >
       <Head title="Snaps" />
       <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
         <form onSubmit={submit}>
-          <div className="mb-4 flex items-center">
-            <div className="relative mr-2 flex-1">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="relative flex-1">
               <input
                 type="file"
                 name="photo"
@@ -81,14 +88,17 @@ export default function Index({ auth, snaps = [] }) {
               <div className="flex items-center">
                 <PrimaryButton
                   type="button"
-                  className="w-full"
+                  className="w-full bg-slate-400 hover:bg-slate-600 transition-colors duration-200"
                   onClick={() => document.getElementById('photo').click()}
                 >
                   {selectedFileName || 'Choose a file to snap'}
                 </PrimaryButton>
               </div>
             </div>
-            <PrimaryButton className="mt-0 w-1/4" disabled={processing}>
+            <PrimaryButton
+              className="mt-0 w-1/4 bg-blue-600 hover:bg-blue-800 text-white font-semibold shadow-lg transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              disabled={processing || !data.photo}
+            >
               Snap
             </PrimaryButton>
           </div>
@@ -131,13 +141,13 @@ export default function Index({ auth, snaps = [] }) {
             <div className="flex justify-end space-x-4">
               <PrimaryButton
                 onClick={() => setSnapToDelete(null)}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+                className="bg-slate-500 hover:bg-slate-600 transition-colors duration-200"
               >
                 Cancel
               </PrimaryButton>
               <PrimaryButton
                 onClick={confirmDeleteSnap}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 transition-colors duration-200"
               >
                 Delete
               </PrimaryButton>

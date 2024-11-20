@@ -16,7 +16,9 @@ class SnapController extends Controller
      */
     public function index(): Response
     {
-        $snaps = Snap::with('user')->get();
+        $snaps = Snap::with('user')
+            ->latest()
+            ->get();
         return Inertia::render('Snaps/Index', [
             'auth' => auth()->user(),
             'snaps' => $snaps,
